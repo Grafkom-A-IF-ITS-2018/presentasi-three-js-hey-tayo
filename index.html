@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>
+		Hey Tayo - Basic Scene in Three.js
+	</title>
+	<style type="text/css">
+		body {
+            margin: 0;
+            overflow: hidden;
+        }
+	</style>
+</head>
+<body>
+	<div id="ThreeJSOutput"></div>
+
+	<script type="text/javascript" src="js/three.js"></script>
+	<script type="text/javascript" src="js/dat.gui.js"></script>
+	<script type="text/javascript">
+
+		var scene;
+		var camera;
+		var renderer;
+
+		function init() {
+
+			scene = new THREE.Scene();
+			//scene.fog = new THREE.Fog(0xffffff, 0.01, 100);
+			scene.overrideMaterial = new THREE.MeshLambertMaterial({color: 0xffffff});
+
+			camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 1000.0);
+
+			renderer = new THREE.WebGLRenderer();
+			renderer.setClearColor(new THREE.Color(0x000000, 1.0));
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			renderer.shadowMapEnabled = true;
+
+			var planeGeometry = new THREE.PlaneGeometry(30, 40, 1, 1);
+	        var planeMaterial = new THREE.MeshBasicMaterial({color: 0x888888});
+	        var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+	        plane.receiveShadow = true;
+            plane.rotation.x = -0.5 * Math.PI;
+	        plane.position.x = 0;
+	        plane.position.y = 0;
+	        plane.position.z = 0;
+			scene.add(plane);
+
+			var controls = new function () {
+				this.rotationSpeed = 0.02;
+				this.bouncingSpeed = 0.05;
+				this.cameraRotateX = -30;
+				this.cameraRotateY = 50;
+				this.cameraRotateZ = -20;
+
+				this.addCube = function() {
+					var cubeSize = Math.ceil(Math.random() * 3);
+					var cubeGeometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+					var cubeMaterial = new THREE.MeshLambertMaterial({color: Math.random() * 0xffffff, wireframe: false});
+					var cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+					cube.castShadow = true;
+					cube.name = "cube-" + scene.children.length;
+					cube.position.x = -15 + Math.round((Math.random() * planeGeometry.parameters.width));
+					cube.position.y = Math.round((Math.random() * 4));
+					cube.position.z = -20 + Math.round((Math.random() * planeGeometry.parameters.height));
+					cube.cubeHit = false;
+					scene.add(cube);
+				}
+
+				this.removeObject = function() {
+					var allChildren = scene.children;
+					var lastObject = allChildren[allChildren.length - 1];
+					if (lastObject instanceof THREE.Mesh) {
+						scene.remove(lastObject);
+					}
+				}
+			};
+
+			var gui = new dat.GUI();
+			gui.add(controls, 'rotationSpeed', 0, 0.5);
+			gui.add(controls, 'bouncingSpeed', 0, 0.5);
+			gui.add(controls, 'cameraRotateX', -100, 100);
+			gui.add(controls, 'cameraRotateY', -100, 100);
+			gui.add(controls, 'cameraRotateZ', -100, 100);
+			gui.add(controls, 'addCube');
+			gui.add(controls, 'removeObject');
+
+			var sphereGeometry = new THREE.SphereGeometry(4, 25, 25);
+			var sphereMaterial = new THREE.MeshLambertMaterial({color: 0x7777ff, wireframe: false});
+			var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+
+			sphere.castShadow = true;
+			sphere.position.x = 0;
+			sphere.position.y = 4;
+			sphere.position.z = -10;
+			scene.add(sphere);
+
+			var ambientLight = new THREE.AmbientLight(0x0c0c0c);
+			scene.add(ambientLight);
+
+			var spotLight = new THREE.SpotLight(0xffffff);
+			spotLight.position.set(-20, 100, 10);
+			spotLight.castShadow = true;
+			scene.add(spotLight);
+
+			document.getElementById("ThreeJSOutput").appendChild(renderer.domElement);
+
+			var sphereBounce = 0;
+
+			function animate() {
+				scene.traverse(function (e) {
+					if (e instanceof THREE.Mesh && e != plane) {
+						if (e.cubeHit === false) {
+							e.position.x += controls.bouncingSpeed*5;
+							e.rotation.y += controls.rotationSpeed;
+							e.rotation.z += controls.rotationSpeed/2;
+							if (e.position.x >= 15) {
+								e.cubeHit = true;
+							}
+						}
+						if (e.cubeHit === true){
+							e.position.x -= controls.bouncingSpeed*5;
+							e.rotation.y -= controls.rotationSpeed;
+							e.rotation.z -= controls.rotationSpeed/2;
+							if (e.position.x <= -15) {
+								e.cubeHit = false;
+							}
+						}
+					}
+				})
+				camera.position.x = controls.cameraRotateX;
+				camera.position.y = controls.cameraRotateY;
+				camera.position.z = controls.cameraRotateZ;
+				camera.lookAt(scene.position);
+
+				sphereBounce += controls.bouncingSpeed;
+				sphere.position.x = 0 + (5 * (Math.cos(sphereBounce)));
+				sphere.position.y = 4 + (10 * (Math.abs(Math.sin(sphereBounce))));
+
+				requestAnimationFrame(animate);
+				renderer.render(scene, camera);
+			}
+			animate();
+		}
+
+		function onResize() {
+	        camera.aspect = window.innerWidth / window.innerHeight;
+	        camera.updateProjectionMatrix();
+	        renderer.setSize(window.innerWidth, window.innerHeight);
+	    }
+		window.onload = init;
+		window.addEventListener('resize', onResize, false);
+	</script>
+</body>
+</html>
