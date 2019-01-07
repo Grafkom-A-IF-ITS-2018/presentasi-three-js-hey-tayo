@@ -25,6 +25,7 @@ Creating your first 3D scene and basic components that make up a scene
 | 5111640000106 | 300%         | 71.67 |
 | 5111640000107 | 0%           | 57.33 |
 | 5111640000185 | 0%           | 57.33 |
+
 **FORMULA**: 
 > `Individual Score = Team Score * 0.8 + Team Score * 0.2 * (IF(Contribution > 100%, 100%, Team Score))`
 
